@@ -119,7 +119,10 @@ workflow ONT {
         }
         else {
 
-            DORADO_DEMUX( ch_demux_in, [ [id:'kit_info'], 'TWIST-96B-UDI', [] ] )
+            if (params.dorado_demux_kit) {
+                is_demux_sample_sheet = params.dorado_demux_sample_sheet ? params.dorado_demux_sample_sheet : []
+                DORADO_DEMUX( ch_demux_in, [ [id:'kit_info'], params.dorado_demux_kit, is_demux_sample_sheet ] )
+            }
 
             // ENH: Pass demux.out to ONT_TRIM_REPAIR
             //      -> Should add 'groupName' and other vals to meta

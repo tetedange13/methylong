@@ -170,6 +170,15 @@
                     "default": "5mC_5hmC",
                     "description": "Specify dorado modification, default is 5mC_5hmC, other available modifications can be found on Dorado's GitHub repository."
                 },
+                "dorado_demux_kit": {
+                    "type": "string",
+                    "description": "Specify dorado demux kit name to use."
+                },
+                "dorado_sample_sheet": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "Specify dorado demux sample_sheet path to use."
+                },
                 "pacbio_modcall": {
                     "type": "boolean",
                     "description": "Indicate if required modcalling in PacBio workflow"
