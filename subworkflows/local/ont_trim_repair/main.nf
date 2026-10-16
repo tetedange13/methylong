@@ -7,7 +7,7 @@
 
 include { SAMTOOLS_FASTQ    } from '../../../modules/nf-core/samtools/fastq/main'
 include { SAMTOOLS_SORT     } from '../../../modules/nf-core/samtools/sort/main'
-include { PORECHOP_PORECHOP } from '../../../modules/nf-core/porechop/porechop/main'
+include { FASTPLONG         } from '../../../modules/nf-core/fastplong/main'
 include { SAMTOOLS_IMPORT   } from '../../../modules/nf-core/samtools/import/main'
 include { MODKIT_REPAIR     } from '../../../modules/nf-core/modkit/repair/main'
 include { RENAME_FASTQ      } from '../../../modules/local/rename_fastq/main'
@@ -69,12 +69,14 @@ workflow ONT_TRIM_REPAIR {
 
     RENAME_FASTQ(SAMTOOLS_FASTQ.out.other)
 
-    PORECHOP_PORECHOP(RENAME_FASTQ.out.rename_fastq)
+    // Expect: InputFq, adapters_fa, discard_passed, save_failed
+    FASTPLONG(RENAME_FASTQ.out.rename_fastq, "${projectDir}/assets/to_remove.fa", false, true)
 
-    versions = versions.mix(PORECHOP_PORECHOP.out.versions.first())
-    PORECHOP_PORECHOP.out.log.set { trim_log }
+    // FIXME: fastplong moved to 'topic' -> bellow not working
+    //versions = versions.mix(FASTPLONG.out.versions_fastplong.first())
+    FASTPLONG.out.log.set { trim_log }
 
-    SAMTOOLS_IMPORT(PORECHOP_PORECHOP.out.reads)
+    SAMTOOLS_IMPORT(FASTPLONG.out.reads)
 
     versions = versions.mix(SAMTOOLS_IMPORT.out.versions.first())
 
