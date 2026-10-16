@@ -28,7 +28,7 @@ process DORADO_DEMUX {
         ${reads} \\
         ${args} \\
         --output-dir ./out_demux
-    # Get all 'barcodeNN' dirs (/!\ With sample_sheet, they can be aliased)
+    # Get all 'barcodeNN' subdirs (WARN: With sample_sheet, they can be aliased)
     # FIXME: Should excluded unclassifed
     # Exit with error if only 'unclassifed' ???
     find ./out_demux -type f -name "*.bam" |
