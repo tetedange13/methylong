@@ -5,6 +5,7 @@
  */
 
 include { DORADO_BASECALLER                } from '../../modules/local/dorado/basecaller/main'
+include { DORADO_DEMUX                     } from '../../modules/local/dorado/demux/main'
 
 /*
 ===========================================
@@ -61,6 +62,9 @@ workflow ONT {
 
     FASTQ_UNZIP.out.unzip_input.set{ ch_ont }
 
+    ch_demux_in = ch_ont
+        .map { meta, bam, _fasta -> [ [id:meta.id], bam ] }
+
 
     if (params.no_trim) {
         if (params.bedgraph) {
@@ -115,6 +119,11 @@ workflow ONT {
         }
         else {
 
+            DORADO_DEMUX( ch_demux_in, [ [id:'kit_info'], 'TWIST-96B-UDI', [] ] )
+
+            // ENH: Pass demux.out to ONT_TRIM_REPAIR
+            //      -> Should add 'groupName' and other vals to meta
+            //      -> Also ensure trim is run on each demuxed barcode
             ONT_TRIM_REPAIR(ch_ont)
 
             ont_versions = ont_versions.mix(ONT_TRIM_REPAIR.out.versions)

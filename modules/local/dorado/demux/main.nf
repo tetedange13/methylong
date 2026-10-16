@@ -6,11 +6,10 @@ process DORADO_DEMUX {
 
     input:
     tuple val(meta), path(reads)
-    tuple val(meta2), path(kit_name), path(sample_sheet)
+    tuple val(meta2), val(kit_name), path(sample_sheet)
 
     output:
-    tuple val(meta), path("${meta.id}/*.bam"), emit: bam
-    tuple val(meta), path("${meta.id}/*.bai"), emit: bai
+    tuple val(meta), path("*/*.bam"), emit: bam
     path "versions.yml", emit: versions
 
     when:
@@ -18,8 +17,8 @@ process DORADO_DEMUX {
 
     script:
     def args = task.ext.args ?: ''
-    def kitName = "--kit_name ${kit_name}"
-    def sampleSheet = sample_sheet ? "--sample_sheet ${sample_sheet}" : ""  // Optional
+    def kitName = "--kit-name ${kit_name}"
+    def sampleSheet = sample_sheet ? "--sample-sheet ${sample_sheet}" : ""  // Optional
 
     """
     dorado demux \\
@@ -27,7 +26,14 @@ process DORADO_DEMUX {
         ${kitName} \\
         ${sampleSheet} \\
         ${reads} \\
-        ${args}
+        ${args} \\
+        --output-dir ./out_demux
+    # Get all 'barcodeNN' dirs (/!\ With sample_sheet, they can be aliased)
+    # FIXME: Should excluded unclassifed
+    # Exit with error if only 'unclassifed' ???
+    find ./out_demux -type f -name "*.bam" |
+        xargs -l dirname |
+        xargs mv -v -t .
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
