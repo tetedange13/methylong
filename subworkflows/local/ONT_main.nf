@@ -119,16 +119,8 @@ workflow ONT {
 
             ont_versions = ont_versions.mix(ONT_TRIM_REPAIR.out.versions)
 
-            ONT_ALIGN(ONT_TRIM_REPAIR.out.dorado_in)
-
-            ch_pile_in = ONT_ALIGN.out.ch_pile_in
-            ont_versions = ont_versions.mix(ONT_ALIGN.out.versions)
-            map_stat = ONT_ALIGN.out.flagstat_out
-
-            INDEX_MODKIT_PILEUP(ch_pile_in)
-
-            ont_versions = ont_versions.mix(INDEX_MODKIT_PILEUP.out.versions)
-
+            //Emitted by subwf -> declare empty
+            ch_pile_in = Channel.empty()
         }
     }
 
