@@ -93,9 +93,27 @@ workflow ONT {
         }
     }
     else {
+
+        if (params.dorado_demux_kit) {
+            is_demux_sample_sheet = params.dorado_demux_sample_sheet ? params.dorado_demux_sample_sheet : []
+            DORADO_DEMUX( ch_ont, [ [id:'kit_info'], params.dorado_demux_kit, is_demux_sample_sheet ] )
+
+            // To correctly pass demux.out to ONT_TRIM_REPAIR
+            //      -> 'flatMap' to explode list [meta, [barcode1.bam, barcode2.bam]] -> [meta, barcode1.bam] + [meta, barcode2.bam]
+            //      -> Keep old 'meta.id' as 'parent_id' + inherit 'groupName' and other vals to new_meta
+            // ENH: Remove 'ref' from out of dorado/demux and use a clean join with 'ch_input' ???
+            DORADO_DEMUX.out.bam
+                .flatMap { meta, bams, ref -> bams.collect { bam -> [ [id: bam.baseName, parent_id:meta.id, group:meta.group, method:meta.method], bam, ref] } }
+                .set { in_trim_demuxed }
+        }
+
+        if (!params.dorado_demux_kit) {
+            in_trim_demuxed = ch_ont
+        }
+
         if (params.bedgraph) {
 
-            ONT_TRIM_REPAIR(ch_ont)
+            ONT_TRIM_REPAIR(in_trim_demuxed)
 
             ont_versions = ont_versions.mix(ONT_TRIM_REPAIR.out.versions)
 
@@ -115,18 +133,6 @@ workflow ONT {
         }
         else {
 
-            if (params.dorado_demux_kit) {
-                is_demux_sample_sheet = params.dorado_demux_sample_sheet ? params.dorado_demux_sample_sheet : []
-                DORADO_DEMUX( ch_ont, [ [id:'kit_info'], params.dorado_demux_kit, is_demux_sample_sheet ] )
-            }
-
-            // To correctly pass demux.out to ONT_TRIM_REPAIR
-            //      -> 'flatMap' to explode list [meta, [barcode1.bam, barcode2.bam]] -> [meta, barcode1.bam] + [meta, barcode2.bam]
-            //      -> Keep old 'meta.id' as 'parent_id' + inherit 'groupName' and other vals to new_meta
-            // ENH: Remove 'ref' from out of dorado/demux and use a clean join with 'ch_input' ???
-            DORADO_DEMUX.out.bam
-                .flatMap { meta, bams, ref -> bams.collect { bam -> [ [id: bam.baseName, parent_id:meta.id, group:meta.group, method:meta.method], bam, ref] } }
-                .set { in_trim_demuxed }
             ONT_TRIM_REPAIR(in_trim_demuxed)
 
             ont_versions = ont_versions.mix(ONT_TRIM_REPAIR.out.versions)
