@@ -174,7 +174,7 @@
                     "type": "string",
                     "description": "Specify dorado demux kit name to use."
                 },
-                "dorado_sample_sheet": {
+                "dorado_demux_sample_sheet": {
                     "type": "string",
                     "format": "file-path",
                     "description": "Specify dorado demux sample_sheet path to use."
