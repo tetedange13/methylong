@@ -5,11 +5,11 @@ process DORADO_DEMUX {
     container "docker.io/nanoporetech/dorado:sha9809639e07a927bcc0f584dadd5e59674cf59f3f"
 
     input:
-    tuple val(meta), path(reads)
+    tuple val(meta), path(reads), path(reference)
     tuple val(meta2), val(kit_name), path(sample_sheet)
 
     output:
-    tuple val(meta), path("*.bam"), emit: bam
+    tuple val(meta), path("*.bam"), path(reference), emit: bam
     path "versions.yml", emit: versions
 
     when:

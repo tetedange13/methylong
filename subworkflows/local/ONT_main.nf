@@ -62,10 +62,6 @@ workflow ONT {
 
     FASTQ_UNZIP.out.unzip_input.set{ ch_ont }
 
-    ch_demux_in = ch_ont
-        .map { meta, bam, _fasta -> [ [id:meta.id], bam ] }
-
-
     if (params.no_trim) {
         if (params.bedgraph) {
 
@@ -121,13 +117,17 @@ workflow ONT {
 
             if (params.dorado_demux_kit) {
                 is_demux_sample_sheet = params.dorado_demux_sample_sheet ? params.dorado_demux_sample_sheet : []
-                DORADO_DEMUX( ch_demux_in, [ [id:'kit_info'], params.dorado_demux_kit, is_demux_sample_sheet ] )
+                DORADO_DEMUX( ch_ont, [ [id:'kit_info'], params.dorado_demux_kit, is_demux_sample_sheet ] )
             }
 
-            // ENH: Pass demux.out to ONT_TRIM_REPAIR
-            //      -> Should add 'groupName' and other vals to meta
-            //      -> Also ensure trim is run on each demuxed barcode
-            ONT_TRIM_REPAIR(ch_ont)
+            // To correctly pass demux.out to ONT_TRIM_REPAIR
+            //      -> 'flatMap' to explode list [meta, [barcode1.bam, barcode2.bam]] -> [meta, barcode1.bam] + [meta, barcode2.bam]
+            //      -> Keep old 'meta.id' as 'parent_id' + inherit 'groupName' and other vals to new_meta
+            // ENH: Remove 'ref' from out of dorado/demux and use a clean join with 'ch_input' ???
+            DORADO_DEMUX.out.bam
+                .flatMap { meta, bams, ref -> bams.collect { bam -> [ [id: bam.baseName, parent_id:meta.id, group:meta.group, method:meta.method], bam, ref] } }
+                .set { in_trim_demuxed }
+            ONT_TRIM_REPAIR(in_trim_demuxed)
 
             ont_versions = ont_versions.mix(ONT_TRIM_REPAIR.out.versions)
 
