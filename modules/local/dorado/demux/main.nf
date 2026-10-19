@@ -9,7 +9,7 @@ process DORADO_DEMUX {
     tuple val(meta2), val(kit_name), path(sample_sheet)
 
     output:
-    tuple val(meta), path("*/*.bam"), emit: bam
+    tuple val(meta), path("*.bam"), emit: bam
     path "versions.yml", emit: versions
 
     when:
@@ -31,9 +31,12 @@ process DORADO_DEMUX {
     # Get all 'barcodeNN' subdirs (WARN: With sample_sheet, they can be aliased)
     # FIXME: Should excluded unclassifed
     # Exit with error if only 'unclassifed' ???
-    find ./out_demux -type f -name "*.bam" |
-        xargs -l dirname |
-        xargs mv -v -t .
+    for file in \$(find ./out_demux -type f -name "*.bam");
+    do
+        echo \$file
+        new_name=\$(basename \$(dirname \$file)).bam
+        mv \$file ${meta.id}_\$new_name
+    done
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
