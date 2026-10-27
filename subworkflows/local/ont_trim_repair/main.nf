@@ -77,6 +77,12 @@ workflow ONT_TRIM_REPAIR {
     FASTPLONG.out.log.set { trim_log }
 
     SAMTOOLS_IMPORT(FASTPLONG.out.reads)
+    // Emit also trimmed FASTQ (not repaired yet), as a uBAM
+    SAMTOOLS_IMPORT.out.bam
+        .join(ch_ref_in)
+        .map { meta, trimmed_bam, ref -> [meta, trimmed_bam, ref] }
+        .set { not_repaired }
+
 
     versions = versions.mix(SAMTOOLS_IMPORT.out.versions.first())
 
@@ -100,6 +106,7 @@ workflow ONT_TRIM_REPAIR {
 
     emit:
     dorado_in
+    not_repaired  // FASTQ produced by trimmer, imported as uBAM
     versions
     trim_log
 }
