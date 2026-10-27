@@ -6,6 +6,7 @@
 
 include { DORADO_BASECALLER                } from '../../modules/local/dorado/basecaller/main'
 include { DORADO_DEMUX                     } from '../../modules/local/dorado/demux/main'
+include { MINIMAP2_ALIGN as ONT_ALIGN_NOT_REPAIRED } from '../../modules/nf-core/minimap2/align/main'
 
 /*
 ===========================================
@@ -15,7 +16,6 @@ include { DORADO_DEMUX                     } from '../../modules/local/dorado/de
 
 include { FASTQ_UNZIP                      } from './shared_fastqc_unzip/main'
 include { ONT_ALIGN                        } from './ont_align/main'
-include { ONT_ALIGN as ONT_ALIGN_NOT_REPAIRED } from './ont_align/main'
 include { ONT_TRIM_REPAIR                  } from './ont_trim_repair/main'
 include { BED2BEDGRAPH                     } from './shared_bed2bedgraph/main'
 include { INDEX_MODKIT_PILEUP              } from './shared_modkit_pileup/main'
@@ -119,7 +119,15 @@ workflow ONT {
             ont_versions = ont_versions.mix(ONT_TRIM_REPAIR.out.versions)
 
             ONT_ALIGN(ONT_TRIM_REPAIR.out.dorado_in)
-            ONT_ALIGN_NOT_REPAIRED(ONT_TRIM_REPAIR.out.not_repaired)
+
+            // Align not repaired
+            ONT_TRIM_REPAIR.out.not_repaired
+                .multiMap { meta, modbam, ref ->
+                    bam_in: [meta, modbam]
+                    ref_in: [meta, ref]
+                }
+                .set { not_repaired_in }
+            ONT_ALIGN_NOT_REPAIRED(not_repaired_in.bam_in, not_repaired_in.ref_in, "bam_format", "bai", [], [])
 
             ch_pile_in = ONT_ALIGN.out.ch_pile_in
             ont_versions = ont_versions.mix(ONT_ALIGN.out.versions)
