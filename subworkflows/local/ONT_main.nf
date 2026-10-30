@@ -4,8 +4,9 @@
 ===========================================
  */
 
-include { DORADO_BASECALLER                } from '../../modules/local/dorado/basecaller/main'
-include { DORADO_DEMUX                     } from '../../modules/local/dorado/demux/main'
+include { DORADO_BASECALLER                        } from '../../modules/local/dorado/basecaller/main'
+include { DORADO_DEMUX                             } from '../../modules/local/dorado/demux/main'
+include { PIGZ_COMPRESS as COMPRESS_DEMUX_SUMMARY  } from '../../modules/nf-core/pigz/compress/main'
 include { MINIMAP2_ALIGN as ONT_ALIGN_NOT_REPAIRED } from '../../modules/nf-core/minimap2/align/main'
 
 /*
@@ -106,6 +107,7 @@ workflow ONT {
             DORADO_DEMUX.out.bam
                 .flatMap { meta, bams, ref -> bams.collect { bam -> [ [id: bam.baseName, parent_id:meta.id, group:meta.group, method:meta.method], bam, ref] } }
                 .set { in_trim_demuxed }
+            COMPRESS_DEMUX_SUMMARY(DORADO_DEMUX.out.summary)
         }
 
         if (!params.dorado_demux_kit) {
