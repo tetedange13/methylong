@@ -10,6 +10,7 @@ process DORADO_DEMUX {
 
     output:
     tuple val(meta), path("*.bam"), path(reference), emit: bam
+    tuple val(meta), path("out_demux/sequencing_summary.txt")         , emit: summary, optional: true
     path "versions.yml", emit: versions
 
     when:
